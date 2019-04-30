@@ -19,6 +19,12 @@ class ExceptionHander:
 
 class Campaign:
     def __init__(self,campaign_name, debug = False, variants = 1):
+        '''
+            Constructor Function
+            :Param campagin_name: name of the campagin
+            :Param debug: debug flag
+            :Param variants: number of variants
+        '''
         self.destination_folder = constants.ORIGINAL_FOLDER_PATH
         if debug:
             self.destination_folder = constants.DEBUG_FOLDER_PATH
@@ -39,6 +45,9 @@ class Campaign:
     
     #Creates required folders
     def setup_folder(self):
+        '''
+            Method to setup all the required folders
+        '''
         try:
             path_list = [
             self.campaign_path,
@@ -59,6 +68,12 @@ class Campaign:
     
     #Creates all the initials files
     def inject_files(self):
+        '''
+            Method to create all the required files
+            1) Common Script
+            2) Qualification Script
+            3) All Variant Scripts
+        '''
         files_to_create = [
                 self.qualification_script,
                 self.common_script
@@ -74,6 +89,12 @@ class Campaign:
     
     # Method to insert boilerplate code into all the files
     def populate_file(self):
+        '''
+            Method to inject code into
+            1) Common script
+            2) Qualification Script
+            3) Variant Scripts
+        '''
         files = [
             self.qualification_script,
             self.common_script
@@ -104,6 +125,10 @@ class Campaign:
 
 
     def inject_eligibility_criteria(self,criterias):
+        '''
+            Method to inject Eligibility Creterial into Qualification Scripts
+            :Param criterias: list of elibigility creterias
+        '''
         file_mapping = self.get_condition_mapping()
         checked_conditions = {}
         conditions_to_check = []
@@ -131,6 +156,10 @@ class Campaign:
             self.e_handler.handle_exception(e)
     
     def get_condition_mapping(self):
+        '''
+            Method to return elibigility criteria and it's code mapping
+            :returns: Dic["elibigility criteria":"Code:]
+        '''
         return {
             "roundtrip":conditions.IS_ROUND_TRIP,
             "singlepax":conditions.IS_SINGLE_PAX,
