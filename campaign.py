@@ -3,10 +3,16 @@ import os
 import constants
 from utils import make_abbreviation, merge_conditions
 from lib import criteria as conditions
+from lib import configurations_code as code
+import traceback
+
 class ExceptionHander:
     def __init__(self):
         pass
     def handle_exception(self,exception):
+        exc_type, exc_value, exc_tb = sys.exc_info()
+        traceback.print_exception(exc_type, exc_value, exc_tb)
+        #traceback.print_exception(file=sys.stdout)
         print(exception)
 
 
@@ -74,15 +80,15 @@ class Campaign:
         ]
 
         predefined_code = [
-            constants.QUALIFICATION_CODE,
-            constants.COMMON_CODE
+            code.QUALIFICATION_CODE,
+            code.COMMON_CODE
         ]
         
         try:
             #appending all the variant files into files object
             for i in range(1,self.number_of_variants+1):
                 files.append(self.variant_script_file.replace("$",str(i)))
-                predefined_code.append(constants.VARIANT_CODE)
+                predefined_code.append(code.VARIANT_CODE)
 
             #created an abbreviation for the campaign for data layer object
             abbreviation = make_abbreviation(self.campaign_name)
@@ -98,11 +104,7 @@ class Campaign:
 
 
     def inject_eligibility_criteria(self,criterias):
-        file_mapping = {
-            "roundtrip":conditions.IS_ROUND_TRIP,
-            "singlepax":conditions.IS_SINGLE_PAX,
-            "userlogin":conditions.IS_USER_LOGIN
-        }
+        file_mapping = self.get_condition_mapping()
         checked_conditions = {}
         conditions_to_check = []
         condition_to_inject = ""
@@ -116,12 +118,22 @@ class Campaign:
                 
                     
                 condition_to_inject = merge_conditions(conditions_to_check)
-                print(condition_to_inject)
+            filedata = ""
+            with open(self.qualification_script,'r') as script:
+                filedata = script.read()
+                filedata = filedata.replace("$condition",condition_to_inject)
+            
+            with open(self.qualification_script,'w') as script:
+                script.writelines(filedata)
 
-            # with open(self.qualification_script,'rw') as script:
-            #     filedata = script.read()
-            #     filedata = filedata.replace("$condition",condition_to_inject)
-            #     script.write(filedata)
+
         except Exception as e:
             self.e_handler.handle_exception(e)
+    
+    def get_condition_mapping(self):
+        return {
+            "roundtrip":conditions.IS_ROUND_TRIP,
+            "singlepax":conditions.IS_SINGLE_PAX,
+            "userlogin":conditions.IS_USER_LOGIN
+        }
         
