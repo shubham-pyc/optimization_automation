@@ -11,9 +11,11 @@ def main():
 		debug = arguments.debug
 		conditions = arguments.conditions
 		campaign  = Campaign(campaign_name, debug=True, variants=variants)
+	
 		campaign.setup_folder()
 		campaign.inject_files()
 		campaign.populate_file()
+		
 		condition_mapping = campaign.get_condition_mapping()
 		if conditions:
 			for condition in conditions:

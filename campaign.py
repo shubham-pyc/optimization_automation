@@ -29,16 +29,17 @@ class Campaign:
         if debug:
             self.destination_folder = constants.DEBUG_FOLDER_PATH
         self.campaign_name = campaign_name
-        self.campaign_path = self.destination_folder+"/QA - BookingPath_{}".format(self.campaign_name)
-        self.requirment_folder = "{}/Requirement".format(self.campaign_path)
-        self.source_folder = "{}/Source File".format(self.campaign_path)
-        self.test_suite_folder = "{}/Dev test suite".format(self.campaign_path)
-        self.campaign_script_folder = "{}/campaign scripts".format(self.source_folder)
-        self.variant_script_folder = "{}/variant script".format(self.source_folder)
-        self.qualification_script = "{}/qualification.js".format(self.campaign_script_folder)
-        self.common_script = "{}/common.js".format(self.campaign_script_folder)
-        self.variant_script_file = "{}/variant$.js".format(self.variant_script_folder)
-        
+        self.campaign_path = os.path.join(self.destination_folder,"QA - BookingPath_{}".format(self.campaign_name))
+        self.requirment_folder = os.path.join(self.campaign_path,"Requirement")
+        self.source_folder = os.path.join(self.campaign_path,"Source File")
+        self.test_suite_folder = os.path.join(self.campaign_path,"Dev test suite")
+        self.campaign_scripts_folder = os.path.join(self.source_folder,"campaign scripts")
+        self.variant_scripts_folder = os.path.join(self.source_folder,"variant script")
+        self.common_script = os.path.join(self.campaign_scripts_folder,"common.js")
+        self.qualification_script = os.path.join(self.campaign_scripts_folder,"qualification.js")
+        self.analytics_script = os.path.join(self.campaign_scripts_folder,"analytics.js")
+        self.variant_script_file = os.path.join(self.variant_scripts_folder,"variant$.js")
+
         self.is_folder_setup = False
         self.e_handler = ExceptionHander()
         self.number_of_variants = variants
@@ -53,8 +54,8 @@ class Campaign:
             self.campaign_path,
             self.requirment_folder,
             self.source_folder,
-            self.campaign_script_folder,
-            self.variant_script_folder,
+            self.campaign_scripts_folder,
+            self.variant_scripts_folder,
             self.test_suite_folder
             ]
 
@@ -76,7 +77,8 @@ class Campaign:
         '''
         files_to_create = [
                 self.qualification_script,
-                self.common_script
+                self.common_script,
+                self.analytics_script
             ]
         try:
             if os.path.exists(self.campaign_path) and self.is_folder_setup:
@@ -97,12 +99,14 @@ class Campaign:
         '''
         files = [
             self.qualification_script,
-            self.common_script
+            self.common_script,
+            self.analytics_script
         ]
 
         predefined_code = [
             code.QUALIFICATION_CODE,
-            code.COMMON_CODE
+            code.COMMON_CODE,
+            code.ANALYTICS_CODE
         ]
         
         try:
@@ -127,19 +131,22 @@ class Campaign:
     def inject_eligibility_criteria(self,criterias):
         '''
             Method to inject Eligibility Creterial into Qualification Scripts
-            :Param criterias: list of elibigility creterias
+            :Param criterias: list of elibigility criterias
         '''
         file_mapping = self.get_condition_mapping()
         checked_conditions = {}
         conditions_to_check = []
+        function_to_call = []
         condition_to_inject = ""
         try:
             with open(self.qualification_script,'a+') as script:
                 
                 for criteria in criterias:
                     if criteria in file_mapping:
-                        script.writelines(file_mapping[criteria]['code'])
-                        conditions_to_check.append(file_mapping[criteria]['requirement'])
+                        condition_object =file_mapping[criteria] 
+                        script.writelines(condition_object['code'])
+                        conditions_to_check.append(condition_object['requirement'])
+                        function_to_call.append(condition_object['call'])
                 
                     
                 condition_to_inject = merge_conditions(conditions_to_check)
@@ -147,7 +154,8 @@ class Campaign:
             with open(self.qualification_script,'r') as script:
                 filedata = script.read()
                 filedata = filedata.replace("$condition",condition_to_inject)
-            
+                filedata = filedata.replace("CONDITION"," && ".join(function_to_call))
+
             with open(self.qualification_script,'w') as script:
                 script.writelines(filedata)
 
@@ -160,9 +168,5 @@ class Campaign:
             Method to return elibigility criteria and it's code mapping
             :returns: Dic["elibigility criteria":"Code:]
         '''
-        return {
-            "roundtrip":conditions.IS_ROUND_TRIP,
-            "singlepax":conditions.IS_SINGLE_PAX,
-            "userlogin":conditions.IS_USER_LOGIN
-        }
+        return conditions.CRITERIA_CODE_MAPPING
         
