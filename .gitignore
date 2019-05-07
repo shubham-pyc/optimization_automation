@@ -107,4 +107,3 @@ venv.bak/
 
 #Presentations
 *.pptx
-*/__init__.py
